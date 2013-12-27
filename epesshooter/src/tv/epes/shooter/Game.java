@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -22,6 +23,8 @@ public class Game implements ApplicationListener{
 	private static final int CAMERA_WIDTH = 480;
 	private static final int CAMERA_HEIGHT = 800;
 	
+	Sound levelUpSound;
+	Sound hitSound;
 	Texture tower;
 	Rectangle rect_tower;
 	Texture baddie;
@@ -39,6 +42,8 @@ public class Game implements ApplicationListener{
 	long lastBaddieTime;
 	int score;
 	int lives;
+	int difficultyMultiplier;
+	int levelUp;
 	private boolean gameOver;
 	
 	@Override
@@ -58,6 +63,8 @@ public class Game implements ApplicationListener{
 		score = 0;
 		lives = 5;
 		gameOver = false;
+		levelUp = 0;
+		difficultyMultiplier = 0;
 		
 		/** Tower sprite **/
 		tower = new Texture(Gdx.files.internal("tower.png"));
@@ -72,13 +79,19 @@ public class Game implements ApplicationListener{
 		
 		/** Baddy sprite **/
 		baddie = new Texture(Gdx.files.internal("baddie.png"));
+		
+		//Sound
+		hitSound = Gdx.audio.newSound(Gdx.files.internal("shoot.ogg"));
+		levelUpSound = Gdx.audio.newSound(Gdx.files.internal("levelUp.ogg"));
+		
 	}
 
 	@Override
 	public void dispose() {
 		tower.dispose();
 		bullet.dispose();
-		baddie.dispose();		
+		baddie.dispose();
+		hitSound.dispose();
 	}
 
 	@Override
@@ -139,9 +152,17 @@ public class Game implements ApplicationListener{
 					while(iterb.hasNext()){
 						Rectangle baddie = iterb.next();
 						if(baddie.overlaps(b.rect)){
+							hitSound.play();
 							iter.remove();
 							iterb.remove();
 							score++;
+							levelUp++;
+							if(levelUp == 10){
+								lives++;
+								difficultyMultiplier++;
+								levelUpSound.play();
+								levelUp = 0;
+							}
 							//Log.i("score", score +"");
 						}
 					}
@@ -161,7 +182,7 @@ public class Game implements ApplicationListener{
 						gameOver = true;
 				}
 			}
-			
+			//Spawn baddies
 			if(TimeUtils.nanoTime() - lastBaddieTime > 3000000000l){
 				spawnBaddie();
 				//Log.i("", "Baddie Spawned");
@@ -172,8 +193,9 @@ public class Game implements ApplicationListener{
 				Vector3 touchPos = new Vector3();
 				touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 				camera.unproject(touchPos);
-				if(TimeUtils.nanoTime() - lastShotTime > 300000000l)
+				if(TimeUtils.nanoTime() - lastShotTime > 300000000l){				
 					spawnBullet(touchPos.x, touchPos.y);
+				}
 				//Log.i("Touch Pos", "[X: " + touchPos.x + ", Y: " + touchPos.y + "]");
 			}
 		}
