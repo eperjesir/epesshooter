@@ -64,7 +64,7 @@ public class Game implements ApplicationListener{
 		lives = 5;
 		gameOver = false;
 		levelUp = 0;
-		difficultyMultiplier = 0;
+		difficultyMultiplier = 1;
 		
 		/** Tower sprite **/
 		tower = new Texture(Gdx.files.internal("tower.png"));
@@ -92,6 +92,7 @@ public class Game implements ApplicationListener{
 		bullet.dispose();
 		baddie.dispose();
 		hitSound.dispose();
+		levelUpSound.dispose();
 	}
 
 	@Override
@@ -153,7 +154,9 @@ public class Game implements ApplicationListener{
 						Rectangle baddie = iterb.next();
 						if(baddie.overlaps(b.rect)){
 							hitSound.play();
+							/*This somehow is crashing the game*/
 							iter.remove();
+							/*                                 */
 							iterb.remove();
 							score++;
 							levelUp++;
@@ -184,7 +187,9 @@ public class Game implements ApplicationListener{
 			}
 			//Spawn baddies
 			if(TimeUtils.nanoTime() - lastBaddieTime > 3000000000l){
-				spawnBaddie();
+				for(int x = 0; x < difficultyMultiplier; x++){
+					spawnBaddie();
+				}
 				//Log.i("", "Baddie Spawned");
 			}
 			
@@ -193,7 +198,7 @@ public class Game implements ApplicationListener{
 				Vector3 touchPos = new Vector3();
 				touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 				camera.unproject(touchPos);
-				if(TimeUtils.nanoTime() - lastShotTime > 300000000l){				
+				if(TimeUtils.nanoTime() - lastShotTime > 200000000l){				
 					spawnBullet(touchPos.x, touchPos.y);
 				}
 				//Log.i("Touch Pos", "[X: " + touchPos.x + ", Y: " + touchPos.y + "]");
